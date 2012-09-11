@@ -16,8 +16,7 @@ class InsertionLogger
      # we use timeout and not interval because we do not want to count
      # the time used for writing to the log file itself
      loggingTimeoutId = setTimeout(writeToLogFile, 1000)
-     logStream.write('Chars\tInserts\tTotalChars\tTotalInserts')
-     console.log('started logging')
+     logStream.write('Characters\tInserts\tTotalChars\tTotalInserts\n')
       
   logInsertion: (numberOfCharacters) ->
       numberOfChars += numberOfCharacters

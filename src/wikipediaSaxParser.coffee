@@ -1,8 +1,10 @@
 sax = require('sax')
+
+
 class WikipediaSaxParser
 
   fileReadStream = null
-  xmlParser = null
+  xmlSaxStream = null
   record = {}
   rid = 1
 
@@ -10,7 +12,7 @@ class WikipediaSaxParser
   # completely
   endOfFile: () -> 
 
-  newRecord: () ->
+  onNewRecord: () ->
       
 
   constructor: (@xmlFilename) ->
@@ -23,11 +25,18 @@ class WikipediaSaxParser
       
 
   parse: () ->
-      setupXmlParser(@newRecord)
+      setupXmlStream(@onNewRecord)
       setupFileReadStream(@xmlFilename, @endOfFile)     
 
   setupXmlParser = (callbackForNewRecord) ->
-    xmlParser = sax.parser(
+    xmlSaxStream =sax.createStream(false
+                                   {
+                                    trim: true
+                                    normalize: true
+                                    lowercase: false
+                                   }
+                                  )
+                                    xmlParser = sax.parser(
         true
         {
             trim: true
@@ -73,11 +82,13 @@ class WikipediaSaxParser
         encoding: 'utf8'
         bufferSize: 256 * 1024
         })
-
+    fileReadStrea.pipe(xmlPar
     fileReadStream.on(
         'data'
         (str) ->
+            console.log('have read data\n\n\n', str)
             xmlParser.write(str)
+            console.log('data written to xml parser\n\n\n', str)
         )
         
         

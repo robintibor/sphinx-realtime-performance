@@ -1,21 +1,30 @@
 mysql = require('mysql')
+stream = require('stream')
 
-class WikipediaSphinxRTInserter
+class WikipediaSphinxRTInserter extends stream.Stream
     mySQLConnection = null
     constructor: ->
+        @writable = true
         mySQLConnection = mysql.createConnection({
           host     : 'localhost',
           user     : 'root',
           password : 'mastermap',
           port     : 9306
         })
-        console.log("mysql connection", mySQLConnection)
+    
+    write: (newRecord) ->
+        insertWikiRecord(newRecord)
+    
+    end: ->
+        close()
     
     insertWikiRecord: (newRecord) =>
+        console.log('inserting wiki record' , newRecord.id)
         mySQLConnection.query(
             'INSERT INTO rtwiki(id, wid, wtitle, wtext) VALUES(?, ?, ?, ?)'
              [newRecord.id, newRecord.wid, newRecord.wtitle, newRecord.wtext]
             (err, info) ->
+                console.log('inserted wiki record' , newRecord.id)
                 if (err)
                     console.log('ERROR: ', newRecord)
                     throw err

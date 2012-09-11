@@ -6,7 +6,7 @@ exports.testLogging = (test) ->
     insertionLogger = new InsertionLogger('testLogFileName')
     insertionLogger.start()
     insertionLogger.logInsertion(3000)
-    setTimeout(( -> 
+    setTimeout(( ->
         insertionLogger.close()
         stats = require('fs').lstatSync('testLogFileName')              
         test.ok(stats.isFile())
