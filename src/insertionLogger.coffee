@@ -1,9 +1,12 @@
-fs = require("fs")
+fs = require('fs')
+util = require('util')
 
 class InsertionLogger
   logStream = null
   numberOfCharsAtLastTick = 0
   numberOfChars = 0
+  numberOfInsertionsAtLastTick = 0
+  numberOfInsertions = 0
   loggingTimeoutId = null
  
   constructor: (@logFileName) ->
@@ -13,15 +16,28 @@ class InsertionLogger
      # we use timeout and not interval because we do not want to count
      # the time used for writing to the log file itself
      loggingTimeoutId = setTimeout(writeToLogFile, 1000)
+     logStream.write('Chars\tInserts\tTotalChars\tTotalInserts')
+     console.log('started logging')
       
   logInsertion: (numberOfCharacters) ->
       numberOfChars += numberOfCharacters
+      numberOfInsertions++
 
   writeToLogFile = ->
+      console.log('writing to log file')
       numberOfCharsThisSecond = numberOfChars - numberOfCharsAtLastTick
-      logStream.write(numberOfChars  + '\t' + numberOfCharsThisSecond)
+      numberOfInsertionsThisSecond = numberOfInsertions - numberOfInsertionsAtLastTick
+      logStream.write(
+          util.format('%d \t %d \t %d \t %d'
+                       numberOfCharsThisSecond
+                       numberOfInsertionsThisSecond
+                       numberOfChars
+                       numberOfInsertions
+                      ))
+        
       logStream.write('\n')
       numberOfCharsAtLastTick = numberOfChars
+      numberOfInsertionsAtLastTick = numberOfInsertions
       loggingTimeoutId = setTimeout(writeToLogFile, 1000)
 
   close: ->

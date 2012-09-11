@@ -6,9 +6,15 @@ class WikipediaSaxParser
   record = {}
   rid = 1
 
+  # to be defined by user of this class, is called when file has been read
+  # completely
+  endOfFile: () -> 
+
+  newRecord: () ->
+      
+
   constructor: (@xmlFilename) ->
     
-  
   pause: ->
       fileReadStream.pause()
   
@@ -16,22 +22,11 @@ class WikipediaSaxParser
       fileReadStream.resume()
       
 
-  parse: (@callbackForNewRecord) ->
-      setupParser()
-      fileReadStream = require('fs').createReadStream(
-        @xmlFilename
-        {
-        encoding: 'utf8'
-        bufferSize: 256 * 1024
-        })
+  parse: () ->
+      setupXmlParser(@newRecord)
+      setupFileReadStream(@xmlFilename, @endOfFile)     
 
-      fileReadStream.on(
-        'data'
-        (str) ->
-            xmlParser.write(str)
-        )
-
-  setupParser = ->
+  setupXmlParser = (callbackForNewRecord) ->
     xmlParser = sax.parser(
         true
         {
@@ -68,18 +63,30 @@ class WikipediaSaxParser
                     if (temp.id <= 12337000)
                         if (temp.id == 1 || temp.id % 1000 == 0)
                             console.log('SKIPPED: ', temp.id, 'TITLE: ', temp.wtitle)
-                        return
-                    @callbackForNewRecord(temp)
-        
-        xmlParser.end = () ->
-            console.log('DONE.')
-            client.query(
-                'FLUSH RTINDEX rtwiki'
-                (err, info)->
-                    if (err) then throw err
-                    console.log('FLUSHED.')
-                    client.end()
-                )
+                            return
+                    callbackForNewRecord(temp)        
+                
+  setupFileReadStream = (xmlFilename, callbackAtEndOfFile) ->
+    fileReadStream = require('fs').createReadStream(
+        xmlFilename
+        {
+        encoding: 'utf8'
+        bufferSize: 256 * 1024
+        })
 
+    fileReadStream.on(
+        'data'
+        (str) ->
+            xmlParser.write(str)
+        )
+        
+        
+    fileReadStream.on(
+        'end'
+        () ->
+            callbackAtEndOfFile()
+        )
+
+        
 
 exports.WikipediaSaxParser = WikipediaSaxParser
