@@ -1,4 +1,5 @@
 # Remove all entries of the Realtime-Wiki-Index table..
+# Always search for records and delete until there are no more records left
 # There will be a TRUNCATE RTINDEX command sphinxQL in the future to do what this script does :)
 
 mysql = require('mysql')
