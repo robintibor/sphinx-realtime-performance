@@ -13,6 +13,13 @@ build = (callback) ->
   coffee.on 'exit', (code) ->
     callback?() if code is 0
 
+runJitter = (argumentsForJitter) ->
+    jitter = spawn 'jitter', argumentsForJitter
+    jitter.stderr.on 'data', (data) ->
+      process.stderr.write data.toString()
+    jitter.stdout.on 'data', (data) ->
+      print data.toString()
+
 task 'build', 'Build lib/ from src/', ->
   build()
 
@@ -22,6 +29,10 @@ task 'setup-auto-compiling-and-testing', 'compile src and test on changes, run t
       process.stderr.write data.toString()
     jitter.stdout.on 'data', (data) ->
       print data.toString()
+
+task 'auto-compile', 'compiles src and test on changes wihtout running tests', ->
+    runJitter(['src', 'lib'])
+    runJitter(['test', 'test'])
 
 task 'run-perf', 'run small performance test to check whether everything is ok', ->
     printOutput = (error, stdout, stderr) ->

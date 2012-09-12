@@ -16,7 +16,7 @@ class InsertionLogger
      # we use timeout and not interval because we do not want to count
      # the time used for writing to the log file itself
      loggingTimeoutId = setTimeout(writeToLogFile, 1000)
-     logStream.write('Characters\tInserts\tTotalChars\tTotalInserts\n')
+     logStream.write('Second   \tCharacters\tInserts\tTotalChars\tTotalInserts\n')
       
   logInsertion: (numberOfCharacters) ->
       numberOfChars += numberOfCharacters
@@ -27,7 +27,8 @@ class InsertionLogger
       numberOfCharsThisSecond = numberOfChars - numberOfCharsAtLastTick
       numberOfInsertionsThisSecond = numberOfInsertions - numberOfInsertionsAtLastTick
       logStream.write(
-          util.format('%d  \t %d \t %d \t %d'
+          util.format('%d \t %d  \t %d \t %d \t %d'
+                       Date.now() / 1000
                        numberOfCharsThisSecond
                        numberOfInsertionsThisSecond
                        numberOfChars

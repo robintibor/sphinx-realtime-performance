@@ -9,6 +9,7 @@ finishedParsing = false
 
 setupQueue = ->
     insertRecord = (newRecord, callback) ->
+        # callback to signal 
         wikipediaSphinxRTInserter.insertWikiRecord(newRecord, callback)
         insertionLogger.logInsertion(newRecord.wtext.length)
     numOfTasksDoneAtOnce = 100
