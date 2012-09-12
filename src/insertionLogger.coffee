@@ -10,7 +10,7 @@ class InsertionLogger
   loggingTimeoutId = null
  
   constructor: (@logFileName) ->
-    
+      
   start: ->
      logStream = fs.createWriteStream(@logFileName)
      # we use timeout and not interval because we do not want to count
@@ -27,7 +27,7 @@ class InsertionLogger
       numberOfCharsThisSecond = numberOfChars - numberOfCharsAtLastTick
       numberOfInsertionsThisSecond = numberOfInsertions - numberOfInsertionsAtLastTick
       logStream.write(
-          util.format('%d \t %d \t %d \t %d'
+          util.format('%d  \t %d \t %d \t %d'
                        numberOfCharsThisSecond
                        numberOfInsertionsThisSecond
                        numberOfChars

@@ -12,6 +12,8 @@ class WikipediaSaxParser
   # completely
   endOfFile: () -> 
 
+  # to be defined by user of this class, is called when new record 
+  # has been parsed
   onNewRecord: () ->
       
 
@@ -20,7 +22,7 @@ class WikipediaSaxParser
   pause: ->
       fileReadStream.pause()
   
-  resumeParsing: ->
+  resume: ->
       fileReadStream.resume()
       
 
@@ -28,42 +30,39 @@ class WikipediaSaxParser
       setupXmlStream(@onNewRecord)
       setupFileReadStream(@xmlFilename, @endOfFile)     
 
-  setupXmlParser = (callbackForNewRecord) ->
-    xmlSaxStream =sax.createStream(false
-                                   {
-                                    trim: true
-                                    normalize: true
-                                    lowercase: false
-                                   }
-                                  )
-                                    xmlParser = sax.parser(
-        true
-        {
-            trim: true
-            normalize: true
-            lowercase: false
-        })
-    
-    xmlParser.onerror = (e) ->
+  setupXmlStream = (callbackForNewRecord) ->
+    xmlSaxStream = sax.createStream(false
+                                    {
+                                        trim: true
+                                        normalize: true
+                                        lowercase: false
+                                    })
+                              
+    xmlSaxStream.on('error', (e) ->
         console.log('ERROR: ', e)
         process.exit(-1)
-        
-    xmlParser.ontext = (t) ->
-        if xmlParser.tag == null then return
-        switch xmlParser.tag.name
-            when 'id'
-                record.wid ?= t
-            when 'title'
-                record.wtitle = t
-            when 'text'
-                record.wtext = t
-        		 
-        xmlParser.onopentag = (tag) ->
-            if (tag.name == 'page')
+    )
+    
+    xmlSaxStream.on('text', (text) ->
+        if xmlSaxStream._parser.tag == null then return
+        # TODO(robintibor@gmail.com): ignore tag entirely if
+        # currently not inside a page node
+        switch xmlSaxStream._parser.tag.name
+            when 'ID'
+                record.wid ?= text
+            when 'TITLE'
+                record.wtitle = text
+            when 'TEXT'
+                record.wtext = text
+        )
+                 
+    xmlSaxStream.on('opentag', (tag) ->
+            if (tag.name == 'PAGE')
                 record = {}
-        
-        xmlParser.onclosetag = (tag) ->
-            if(tag == 'page')
+            )
+    
+    xmlSaxStream.on('closetag', (tag) ->
+            if(tag == 'PAGE')
                 # saving record
                 temp = record
                 temp.id = rid
@@ -73,7 +72,8 @@ class WikipediaSaxParser
                         if (temp.id == 1 || temp.id % 1000 == 0)
                             console.log('SKIPPED: ', temp.id, 'TITLE: ', temp.wtitle)
                             return
-                    callbackForNewRecord(temp)        
+                    callbackForNewRecord(temp)  
+                    )
                 
   setupFileReadStream = (xmlFilename, callbackAtEndOfFile) ->
     fileReadStream = require('fs').createReadStream(
@@ -82,15 +82,8 @@ class WikipediaSaxParser
         encoding: 'utf8'
         bufferSize: 256 * 1024
         })
-    fileReadStrea.pipe(xmlPar
-    fileReadStream.on(
-        'data'
-        (str) ->
-            console.log('have read data\n\n\n', str)
-            xmlParser.write(str)
-            console.log('data written to xml parser\n\n\n', str)
-        )
         
+    fileReadStream.pipe(xmlSaxStream)
         
     fileReadStream.on(
         'end'

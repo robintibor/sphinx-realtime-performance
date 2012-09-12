@@ -3,29 +3,34 @@ WikipediaSaxParser = require('./wikipediaSaxParser').WikipediaSaxParser
 WikipediaSphinxRTInserter = require('./wikipediaSphinxRTInserter').WikipediaSphinxRTInserter
 InsertionLogger = require('./insertionLogger').InsertionLogger
 
+wikiXMLFilename = process.argv[2]
+insertQueue = insertionLogger = wikipediaSphinxRTInserter = wikipediaSaxParser = null
+finishedParsing = false
 
-insertRecord = (newRecord, callback) ->
-    wikipediaSphinxRTInserter.insertWikiRecord(newRecord)
-    insertionLogger.logInsertion(newRecord.wtext.length)
-    callback()
-    
-insertQueue = queue(insertRecord, 1)
-insertQueue.drain = () ->
-    console.log("Insert queue length is #{insertQueue.length()}, resuming stream")
-    wikipediaSaxParser.resumeParsing()
+setupQueue = ->
+    insertRecord = (newRecord, callback) ->
+        wikipediaSphinxRTInserter.insertWikiRecord(newRecord, callback)
+        insertionLogger.logInsertion(newRecord.wtext.length)
+    numOfTasksDoneAtOnce = 100
+    insertQueue = queue(insertRecord, numOfTasksDoneAtOnce)
+    insertQueue.drain = () ->
+        wikipediaSaxParser.resume()
+        if (finishedParsing)
+            wikipediaSphinxRTInserter.close()
+            insertionLogger.close()
 
-    
+setupParserAndInserter = ->
+    wikipediaSphinxRTInserter = new WikipediaSphinxRTInserter()
+    insertionLogger = new InsertionLogger('insertionlog.csv')  
+    wikipediaSaxParser = new WikipediaSaxParser(wikiXMLFilename)
+    wikipediaSaxParser.onNewRecord = (newRecord) -> 
+                                        insertQueue.push(newRecord)
+                                        if (insertQueue.length > 100)
+                                            wikipediaSaxParser.pause()
+    wikipediaSaxParser.endOfFile = () -> 
+        finishedParsing = true
 
-wikipediaSphinxRTInserter = new WikipediaSphinxRTInserter()
-insertionLogger = new InsertionLogger('insertionlog.csv')  
-wikipediaSaxParser = new WikipediaSaxParser('../wikidata/enwiki.xml.first1000000')
-wikipediaSaxParser.onNewRecord = (newRecord) -> 
-                                    insertQueue.push(newRecord)
-                                    if (insertQueue.length > 100)
-                                        wikipediaSaxParser.pause()
-wikipediaSaxParser.endOfFile = () -> 
-    wikipediaSphinxRTInserter.close()
-    insertionLogger.close()
-
+setupQueue()
+setupParserAndInserter()
 insertionLogger.start()
 wikipediaSaxParser.parse()

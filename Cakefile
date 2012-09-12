@@ -2,6 +2,7 @@ fs = require 'fs'
 
 {print} = require 'sys'
 {spawn} = require 'child_process'
+exec = require('child_process').exec
 
 build = (callback) ->
   coffee = spawn 'coffee', ['-c', '-o', 'lib', 'src']
@@ -15,21 +16,28 @@ build = (callback) ->
 task 'build', 'Build lib/ from src/', ->
   build()
 
-task 'compile-on-change', 'Compile src/ and test/ to lib and lib/test on changes', ->
-    invoke 'compile-source-on-change'
-    invoke 'compile-tests-on-change'
-
-task 'compile-source-on-change', 'Watch src/ for changes and compile to lib/', ->
-    coffee = spawn 'coffee', ['-w', '-c', '-o', 'lib', 'src']
-    coffee.stderr.on 'data', (data) ->
+task 'setup-auto-compiling-and-testing', 'compile src and test on changes, run test on changes', ->
+    jitter = spawn 'jitter', ['src', 'lib', 'test']
+    jitter.stderr.on 'data', (data) ->
       process.stderr.write data.toString()
-    coffee.stdout.on 'data', (data) ->
+    jitter.stdout.on 'data', (data) ->
       print data.toString()
 
-
-task 'compile-tests-on-change', 'Watch test/ for changes and compile to lib/test', ->
-    coffee = spawn 'coffee', ['-w', '-c', '-o', 'lib/test', 'test']
-    coffee.stderr.on 'data', (data) ->
-      process.stderr.write data.toString()
-    coffee.stdout.on 'data', (data) ->
-      print data.toString()
+task 'run-perf', 'run small performance test to check whether everything is ok', ->
+    printOutput = (error, stdout, stderr) ->
+        print 'ERROR:' + error if error
+        print stdout if stdout
+        print 'STDERR:' + stderr if stderr
+    exec 'node lib/insertWikipediaToSphinx.js wikidata/enwiki.xml.first30000lines',
+         ((error, stdout, stderr) -> 
+            printOutput(error, stdout, stderr)
+            exec 'node lib/cleanRTWikiDB.js',
+                (error, stdout, stderr) -> 
+                    printOutput(error, stdout, stderr)
+                    exec 'cat insertionlog.csv', printOutput
+                )
+            
+        
+            
+    
+    

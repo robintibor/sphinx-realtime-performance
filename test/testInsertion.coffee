@@ -1,15 +1,17 @@
-InsertionLogger = require('../insertionLogger').InsertionLogger
+InsertionLogger = require('../lib/insertionLogger').InsertionLogger
+
 
 exports.testLogging = (test) -> 
     test.expect(1)
     # Create Insertion Logger, make one insertion and check that logfile exists
-    insertionLogger = new InsertionLogger('testLogFileName')
+    testFileName = 'temp/testLogFileName'
+    insertionLogger = new InsertionLogger(testFileName)
     insertionLogger.start()
     insertionLogger.logInsertion(3000)
-    setTimeout(( ->
+    setTimeout(( -> 
         insertionLogger.close()
-        stats = require('fs').lstatSync('testLogFileName')              
+        stats = require('fs').lstatSync(testFileName)              
         test.ok(stats.isFile())
-        console.log('ok')
         test.done()
         ), 1000)
+    

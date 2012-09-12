@@ -1,4 +1,6 @@
-# Remove all entries of the table..
+# Remove all entries of the Realtime-Wiki-Index table..
+# Simply sequentially deletes ids, starting from 1 until nothin is left in the table 
+# There will be a TRUNCATE RTINDEX command sphinxQL in the future to do what this script does :)
 
 mysql = require('mysql')
 
@@ -8,6 +10,18 @@ mySQLConnection = mysql.createConnection({
   password : 'mastermap',
   port     : 9306
 })
+
+findAndDeleteRecords = () ->
+    mySQLConnection.query('SELECT id FROM rtwiki LIMIT 0, 1000',
+        (err, info) ->
+            console.log('deleting', info.length, 'records.')
+            deleteRecordWithId(parseInt(record.id)) for record in info
+            if (info.length == 0)
+                setTimeout((() -> mySQLConnection.end()), 1000)
+            else
+                findAndDeleteRecords()
+        )
+                
 
 checkIfMoreRecordsExist =  (callback) ->
      mySQLConnection.query('SELECT COUNT(DISTINCT wid) FROM rtwiki'
@@ -25,16 +39,7 @@ deleteRecordWithId = (id) ->
                           [id]
                 (err, info) ->
                     if (err)
-                        console.log('ERROR with Id: ', id)
-                    checkIfMoreRecordsExist(
-                        (moreRecords) -> 
-                            if (moreRecords)
-                                if id % 100 == 0
-                                    console.log("deleted id " + id)
-                                deleteRecordWithId (id + 1)
-                            else
-                                mySQLConnection.end()
-                    )
+                        console.log('ERROR with Id:', id, err)                    
                 )
 
-deleteRecordWithId(0)
+findAndDeleteRecords()
