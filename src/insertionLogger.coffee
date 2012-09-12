@@ -1,5 +1,6 @@
 fs = require('fs')
 util = require('util')
+numToStrWithLength =  require('./utilities').numToStrWithLength
 
 class InsertionLogger
   logStream = null
@@ -28,11 +29,11 @@ class InsertionLogger
       numberOfInsertionsThisSecond = numberOfInsertions - numberOfInsertionsAtLastTick
       logStream.write(
           util.format('%d \t %d  \t %d \t %d \t %d'
-                       Date.now() / 1000
-                       numberOfCharsThisSecond
-                       numberOfInsertionsThisSecond
-                       numberOfChars
-                       numberOfInsertions
+                       numToStrWithLength(Date.now() / 1000, 10)
+                       numToStrWithLength(numberOfCharsThisSecond, 10)
+                       numToStrWithLength(numberOfInsertionsThisSecond, 10)
+                       numToStrWithLength(numberOfChars, 10)
+                       numToStrWithLength(numberOfInsertions, 10)
                       ))
         
       logStream.write('\n')
