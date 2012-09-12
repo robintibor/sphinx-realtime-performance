@@ -1,5 +1,4 @@
 # Remove all entries of the Realtime-Wiki-Index table..
-# Simply sequentially deletes ids, starting from 1 until nothin is left in the table 
 # There will be a TRUNCATE RTINDEX command sphinxQL in the future to do what this script does :)
 
 mysql = require('mysql')
