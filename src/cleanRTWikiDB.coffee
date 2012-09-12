@@ -14,25 +14,14 @@ mySQLConnection = mysql.createConnection({
 findAndDeleteRecords = () ->
     mySQLConnection.query('SELECT id FROM rtwiki LIMIT 0, 1000',
         (err, info) ->
-            console.log('deleting', info.length, 'records.')
-            deleteRecordWithId(parseInt(record.id)) for record in info
             if (info.length == 0)
-                setTimeout((() -> mySQLConnection.end()), 1000)
+                # Everything deleted, just end connection..
+                mySQLConnection.end()
             else
+                console.log('deleting', info.length, 'records.')
+                deleteRecordWithId(parseInt(record.id)) for record in info
                 findAndDeleteRecords()
         )
-                
-
-checkIfMoreRecordsExist =  (callback) ->
-     mySQLConnection.query('SELECT COUNT(DISTINCT wid) FROM rtwiki'
-                            (err, info) ->
-                                if (info.length % 100 == 0)
-                                    console.log(info.length + " records left.")
-                                if (info.length > 0)
-                                    callback(true)
-                                else
-                                    callback(false)
-                          )
 
 deleteRecordWithId = (id) ->
     mySQLConnection.query('DELETE FROM rtwiki WHERE id=?'
