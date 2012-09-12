@@ -63,7 +63,7 @@ listenForUserQuit = ->
         finishedParsing = true
         insertQueue.empty = -> 
             console.log("Queue empty, going to quit")
-        console.log("Quitting....", answer)
+        console.log("Quitting....")
         consoleReader.close()
     )
 

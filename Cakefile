@@ -35,7 +35,7 @@ task 'auto-compile', 'compiles src and test on changes wihtout running tests', -
     runJitter(['src', 'lib'])
     runJitter(['test', 'test'])
 
-option '', '--inputfile [Filename]', 'Description...'
+option '', '--inputfile [Filename]', 'Filename tof wikipedia xml input file...'
 task 'run-perf', 'run small performance test to check whether everything is ok', (options) ->
     printOutput = (error, stdout, stderr) ->
         print 'ERROR:' + error if error
