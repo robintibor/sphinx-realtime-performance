@@ -9,6 +9,7 @@ class InsertionLogger
   numberOfInsertionsAtLastTick = 0
   numberOfInsertions = 0
   loggingTimeoutId = null
+  startMilliSecond = 0
  
   constructor: (@logFileName) ->
       
@@ -18,6 +19,7 @@ class InsertionLogger
      # the time used for writing to the log file itself
      loggingTimeoutId = setInterval(writeToLogFile, 1000)
      logStream.write('Second   \tCharacters\tInserts\tTotalChars\tTotalInserts\n')
+     startMilliSecond = Date.now()
       
   logInsertion: (numberOfCharacters) ->
       numberOfChars += numberOfCharacters
@@ -38,6 +40,16 @@ class InsertionLogger
       logStream.write('\n')
       numberOfCharsAtLastTick = numberOfChars
       numberOfInsertionsAtLastTick = numberOfInsertions
+
+    writeAverageStatistics: ->
+        milliSecondsNow = Date.now()
+        durationOfPerformanceTest = (milliSecondsNow - startMilliSecond) /  1000
+        averageNumberOfChars = Math.floor(numberOfChars / durationOfPerformanceTest)
+        averageNumberOfInsertions = Math.floor(numberOfInsertions / durationOfPerformanceTest)
+        averageFileStream = fs.createWriteStream(@logFileName + ".average")
+        averageFileStream.write("Chars/sec\t Inserts/sec\n")
+        averageFileStream.write(util.format('%s    \t %s\n', averageNumberOfChars, averageNumberOfInsertions))
+        averageFileStream.end()
 
   close: ->
       clearInterval(loggingTimeoutId)

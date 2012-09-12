@@ -68,12 +68,8 @@ class WikipediaSaxParser
                 temp.id = rid
                 rid += 1
                 if (temp.wid? && temp.wtitle? && temp.wtext?)
-                    if (temp.id <= 12337000)
-                        if (temp.id == 1 || temp.id % 1000 == 0)
-                            console.log('SKIPPED: ', temp.id, 'TITLE: ', temp.wtitle)
-                            return
                     callbackForNewRecord(temp)  
-                    )
+            )
                 
   setupFileReadStream = (xmlFilename, callbackAtEndOfFile) ->
     fileReadStream = require('fs').createReadStream(

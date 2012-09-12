@@ -19,8 +19,6 @@ class WikipediaSphinxRTInserter
                 if (err)
                     console.log('ERROR inserting: ', err)
                     throw err
-                if newRecord.id == 1 || newRecord.id % 1000 == 0
-                    console.log('SAVED: ', newRecord.id, 'TITLE: ', newRecord.wtitle)
                 callback()
         )
 

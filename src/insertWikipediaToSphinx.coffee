@@ -4,6 +4,7 @@
 # reading/parsing is faster than inserting, so when more than a certain number of
 # inserts have not been completed the parsing is paused until only some
 # inserts (numOfInsertsDoneAtOnce, see setupQueue) remain incompleted
+readline = require('readline')
 queue = require('async').queue
 WikipediaSaxParser = require('./wikipediaSaxParser').WikipediaSaxParser
 WikipediaSphinxRTInserter = require('./wikipediaSphinxRTInserter').WikipediaSphinxRTInserter
@@ -11,6 +12,7 @@ InsertionLogger = require('./insertionLogger').InsertionLogger
 
 wikiXMLFilename = process.argv[2]
 insertQueue = insertionLogger = wikipediaSphinxRTInserter = wikipediaSaxParser = null
+consoleReader = null
 finishedParsing = false
 
 setupQueue = ->
@@ -24,6 +26,7 @@ setupQueue = ->
     # are complete
     insertQueue.drain = () ->
         if (finishedParsing)
+            insertionLogger.writeAverageStatistics()
             wikipediaSphinxRTInserter.close()
             insertionLogger.close()
     insertQueue.empty = ->
@@ -42,6 +45,7 @@ setupParserAndInserter = ->
                                             wikipediaSaxParser.pause()
     wikipediaSaxParser.endOfFile = () -> 
         finishedParsing = true
+        consoleReader.close()
 
 startInserting = ->
     insertionLogger.start()
@@ -49,6 +53,21 @@ startInserting = ->
     # see setupParserAndInserter :)
     wikipediaSaxParser.parse()
 
+listenForUserQuit = ->
+    consoleReader = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    })
+    consoleReader.question("Press Enter to stop\n", (answer) ->
+        wikipediaSaxParser.pause()
+        finishedParsing = true
+        insertQueue.empty = -> 
+            console.log("Queue empty, going to quit")
+        console.log("Quitting....", answer)
+        consoleReader.close()
+    )
+
 setupQueue()
 setupParserAndInserter()
 startInserting()
+listenForUserQuit()
