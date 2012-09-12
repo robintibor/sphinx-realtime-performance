@@ -12,12 +12,10 @@ class WikipediaSphinxRTInserter
         })
     
     insertWikiRecord: (newRecord, callback) ->
-        console.log('inserting wiki record' , newRecord.id)
         mySQLConnection.query(
             'INSERT INTO rtwiki(id, wid, wtitle, wtext) VALUES(?, ?, ?, ?)'
              [newRecord.id, newRecord.wid, newRecord.wtitle, newRecord.wtext]
             (err, info) ->
-                console.log('inserted wiki record' , newRecord.id)
                 if (err)
                     console.log('ERROR inserting: ', err)
                     throw err

@@ -16,7 +16,7 @@ class InsertionLogger
      logStream = fs.createWriteStream(@logFileName)
      # we use timeout and not interval because we do not want to count
      # the time used for writing to the log file itself
-     loggingTimeoutId = setTimeout(writeToLogFile, 1000)
+     loggingTimeoutId = setInterval(writeToLogFile, 1000)
      logStream.write('Second   \tCharacters\tInserts\tTotalChars\tTotalInserts\n')
       
   logInsertion: (numberOfCharacters) ->
@@ -24,14 +24,13 @@ class InsertionLogger
       numberOfInsertions++
 
   writeToLogFile = ->
-      console.log('writing to log file')
       numberOfCharsThisSecond = numberOfChars - numberOfCharsAtLastTick
       numberOfInsertionsThisSecond = numberOfInsertions - numberOfInsertionsAtLastTick
       logStream.write(
-          util.format('%d \t %d  \t %d \t %d \t %d'
+          util.format('%s \t %s  \t %s \t %s \t %s'
                        numToStrWithLength(Date.now() / 1000, 10)
                        numToStrWithLength(numberOfCharsThisSecond, 10)
-                       numToStrWithLength(numberOfInsertionsThisSecond, 10)
+                       numToStrWithLength(numberOfInsertionsThisSecond, 5)
                        numToStrWithLength(numberOfChars, 10)
                        numToStrWithLength(numberOfInsertions, 10)
                       ))
@@ -39,10 +38,9 @@ class InsertionLogger
       logStream.write('\n')
       numberOfCharsAtLastTick = numberOfChars
       numberOfInsertionsAtLastTick = numberOfInsertions
-      loggingTimeoutId = setTimeout(writeToLogFile, 1000)
 
   close: ->
-      clearTimeout(loggingTimeoutId)
+      clearInterval(loggingTimeoutId)
       logStream.end()
 
 exports.InsertionLogger = InsertionLogger

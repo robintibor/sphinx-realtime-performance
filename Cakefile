@@ -4,6 +4,7 @@ fs = require 'fs'
 {spawn} = require 'child_process'
 exec = require('child_process').exec
 
+
 build = (callback) ->
   coffee = spawn 'coffee', ['-c', '-o', 'lib', 'src']
   coffee.stderr.on 'data', (data) ->
@@ -34,12 +35,13 @@ task 'auto-compile', 'compiles src and test on changes wihtout running tests', -
     runJitter(['src', 'lib'])
     runJitter(['test', 'test'])
 
-task 'run-perf', 'run small performance test to check whether everything is ok', ->
+option '', '--inputfile [Filename]', 'Description...'
+task 'run-perf', 'run small performance test to check whether everything is ok', (options) ->
     printOutput = (error, stdout, stderr) ->
         print 'ERROR:' + error if error
         print stdout if stdout
         print 'STDERR:' + stderr if stderr
-    exec 'node lib/insertWikipediaToSphinx.js wikidata/enwiki.xml.first30000lines',
+    exec 'node lib/insertWikipediaToSphinx.js ' + options['inputfile'],
          ((error, stdout, stderr) -> 
             printOutput(error, stdout, stderr)
             exec 'node lib/cleanRTWikiDB.js',
