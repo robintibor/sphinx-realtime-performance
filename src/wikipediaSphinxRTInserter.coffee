@@ -14,10 +14,23 @@ class WikipediaSphinxRTInserter
     insertWikiRecord: (newRecord, callback) ->
         mySQLConnection.query(
             'INSERT INTO rtwiki(id, topic_id, title, content, user_ids) VALUES(?, ?, ?, ?, (1,2,3))'
-             [newRecord.id, newRecord.wid, newRecord.wtitle, newRecord.wtext]
+             [newRecord.id, newRecord.topicId, newRecord.wtitle, newRecord.wtext]
             (err, info) ->
                 if (err)
                     console.log('ERROR inserting: ', err)
+                    console.log("Id was #{newRecord.id}")
+                    console.log("info", info)
+                    throw err
+                callback()
+        )
+        
+    updateWikiRecord: (newRecord, callback) ->
+        mySQLConnection.query(
+            'REPLACE INTO rtwiki(id, title, content, user_ids) VALUES(?, ?, ?, (1,2,3))'
+             [newRecord.id, newRecord.wtitle, newRecord.wtext]
+            (err, info) ->
+                if (err)
+                    console.log('ERROR replacing: ', err)
                     throw err
                 callback()
         )

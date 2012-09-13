@@ -6,7 +6,6 @@ class WikipediaSaxParser
   fileReadStream = null
   xmlSaxStream = null
   record = {}
-  rid = 1
 
   # to be defined by user of this class, is called when file has been read
   # completely
@@ -48,8 +47,6 @@ class WikipediaSaxParser
         # TODO(robintibor@gmail.com): ignore tag entirely if
         # currently not inside a page node
         switch xmlSaxStream._parser.tag.name
-            when 'ID'
-                record.wid ?= text
             when 'TITLE'
                 record.wtitle = text
             when 'TEXT'
@@ -65,9 +62,7 @@ class WikipediaSaxParser
             if(tag == 'PAGE')
                 # saving record
                 temp = record
-                temp.id = rid
-                rid += 1
-                if (temp.wid? && temp.wtitle? && temp.wtext?)
+                if (temp.wtitle? && temp.wtext?)
                     callbackForNewRecord(temp)  
             )
                 

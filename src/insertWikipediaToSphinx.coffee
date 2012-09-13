@@ -13,6 +13,8 @@ wikiXMLFilename = process.argv[2]
 insertQueue = wikipediaSaxParser = performanceTestInserter = null
 consoleReader = null
 finishedParsing = false
+numOfTasksDoneAtOnce = 200
+numOfMaximumQueuedTasks = 100
 
 setupPerformanceInserter = ->
     performanceTestInserter = new PerformanceTestInserter()
@@ -20,8 +22,7 @@ setupPerformanceInserter = ->
 setupQueue = ->
     insertRecord = (newRecord, callback) ->
         performanceTestInserter.insertRecord(newRecord, callback)
-    numOfInsertsDoneAtOnce = 200
-    insertQueue = queue(insertRecord, numOfInsertsDoneAtOnce)
+    insertQueue = queue(insertRecord, numOfTasksDoneAtOnce)
     # Shut down program when parsing is finished and all tasks in queue
     # are complete
     insertQueue.drain = () ->
@@ -35,7 +36,7 @@ setupParser = ->
     wikipediaSaxParser = new WikipediaSaxParser(wikiXMLFilename)
     wikipediaSaxParser.onNewRecord = (newRecord) -> 
                                         insertQueue.push(newRecord)
-                                        if (insertQueue.length() > 100)
+                                        if (insertQueue.length() > numOfMaximumQueuedTasks)
                                             # Stop parser to allow inserts into sphinx
                                             # to keep up with parsing speed
                                             wikipediaSaxParser.pause()
@@ -44,6 +45,7 @@ setupParser = ->
         consoleReader.close()
 
 startInserting = ->
+    performanceTestInserter.start()
     # insertion is done automatically when parser parses new record,
     # see setupParser :)
     wikipediaSaxParser.parse()
@@ -58,14 +60,11 @@ listenForUserQuit = ->
         finishedParsing = true
         # prevent queue from resuming parser when empty
         insertQueue.empty = -> 
-            console.log("Queue empty, going to quit")
-        console.log("Quitting....")
+            console.log("Queue empty, #{insertQueue.concurrency} tasks remaining...")
+        console.log("Quitting, waiting for #{insertQueue.concurrency + insertQueue.length()} tasks.")
         consoleReader.close()
     )
 
-startInserting = ->
-    performanceTestInserter.start()
-    wikipediaSaxParser.parse()
     
 setupQueue()
 setupPerformanceInserter()
