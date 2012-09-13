@@ -13,7 +13,7 @@ class WikipediaSphinxRTInserter
     
     insertWikiRecord: (newRecord, callback) ->
         mySQLConnection.query(
-            'INSERT INTO rtwiki(id, wid, wtitle, wtext) VALUES(?, ?, ?, ?)'
+            'INSERT INTO rtwiki(id, topic_id, title, content, user_ids) VALUES(?, ?, ?, ?, (1,2,3))'
              [newRecord.id, newRecord.wid, newRecord.wtitle, newRecord.wtext]
             (err, info) ->
                 if (err)

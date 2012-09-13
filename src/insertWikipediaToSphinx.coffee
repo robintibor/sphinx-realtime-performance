@@ -7,35 +7,31 @@
 readline = require('readline')
 queue = require('async').queue
 WikipediaSaxParser = require('./wikipediaSaxParser').WikipediaSaxParser
-WikipediaSphinxRTInserter = require('./wikipediaSphinxRTInserter').WikipediaSphinxRTInserter
-InsertionLogger = require('./insertionLogger').InsertionLogger
+PerformanceTestInserter = require('./performanceTestInserter').PerformanceTestInserter
 
 wikiXMLFilename = process.argv[2]
-insertQueue = insertionLogger = wikipediaSphinxRTInserter = wikipediaSaxParser = null
+insertQueue = wikipediaSaxParser = performanceTestInserter = null
 consoleReader = null
 finishedParsing = false
 
+setupPerformanceInserter = ->
+    performanceTestInserter = new PerformanceTestInserter()
+
 setupQueue = ->
     insertRecord = (newRecord, callback) ->
-        # callback to signal 
-        wikipediaSphinxRTInserter.insertWikiRecord(newRecord, callback)
-        insertionLogger.logInsertion(newRecord.wtext.length)
+        performanceTestInserter.insertRecord(newRecord, callback)
     numOfInsertsDoneAtOnce = 200
     insertQueue = queue(insertRecord, numOfInsertsDoneAtOnce)
     # Shut down program when parsing is finished and all tasks in queue
     # are complete
     insertQueue.drain = () ->
-        if (finishedParsing)
-            insertionLogger.writeAverageStatistics()
-            wikipediaSphinxRTInserter.close()
-            insertionLogger.close()
+        if (finishedParsing) # parser at e
+            performanceTestInserter.close()
     insertQueue.empty = ->
         # Resume parser so that new records will be inserted
         wikipediaSaxParser.resume()
 
-setupParserAndInserter = ->
-    wikipediaSphinxRTInserter = new WikipediaSphinxRTInserter()
-    insertionLogger = new InsertionLogger('insertionlog.csv')  
+setupParser = ->
     wikipediaSaxParser = new WikipediaSaxParser(wikiXMLFilename)
     wikipediaSaxParser.onNewRecord = (newRecord) -> 
                                         insertQueue.push(newRecord)
@@ -48,9 +44,8 @@ setupParserAndInserter = ->
         consoleReader.close()
 
 startInserting = ->
-    insertionLogger.start()
     # insertion is done automatically when parser parses new record,
-    # see setupParserAndInserter :)
+    # see setupParser :)
     wikipediaSaxParser.parse()
 
 listenForUserQuit = ->
@@ -61,13 +56,19 @@ listenForUserQuit = ->
     consoleReader.question("Press Enter to stop\n", (answer) ->
         wikipediaSaxParser.pause()
         finishedParsing = true
+        # prevent queue from resuming parser when empty
         insertQueue.empty = -> 
             console.log("Queue empty, going to quit")
         console.log("Quitting....")
         consoleReader.close()
     )
 
+startInserting = ->
+    performanceTestInserter.start()
+    wikipediaSaxParser.parse()
+    
 setupQueue()
-setupParserAndInserter()
+setupPerformanceInserter()
+setupParser()
 startInserting()
 listenForUserQuit()
