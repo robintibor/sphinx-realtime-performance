@@ -1,13 +1,14 @@
 WikipediaSphinxRTInserter = require('./wikipediaSphinxRTInserter').WikipediaSphinxRTInserter
 InsertionLogger = require('./insertionLogger').InsertionLogger
-# TODO: output total number of topics as well and output average statistics
-# and do soemthing about user ids!
+
 class PerformanceTestInserter
     numberOfReplacementsPerInsert = 20
     numberOfBlipsPerTopic = 30
     wikipediaSphinxRTInserter = insertionLogger = null
-    blipId = 0  # is used assphinx doc id in theses tests!
-    topicId = 0
+    blipId = 0  # is used as sphinx doc id in theses tests!
+    topicId = 1
+    userId = 5
+    currentTopic = null
 
     constructor: ->
         wikipediaSphinxRTInserter = new WikipediaSphinxRTInserter()
@@ -37,28 +38,71 @@ class PerformanceTestInserter
         insertionLogger.logReplacement(newRecord.wtext.length)
         
     insertNewBlip = (newRecord, callback) ->
-        blipId++
-        newRecord.id = blipId
-        processBlip = decideWhatToDoWithNewBlip()
-        processBlip(newRecord, callback)
+        if (currentTopicHasAllBlipsInserted())
+            createNextTopic()
+        insertBlipToCurrentTopic(newRecord, callback)
 
-    decideWhatToDoWithNewBlip = ->
-        chanceOfOldTopic = Math.random()
-        if (chanceOfOldTopic > (1 / numberOfBlipsPerTopic))
-            return insertBlipToExistingTopic
-        else
-            return insertBlipToNewTopic
+    currentTopicHasAllBlipsInserted = ->
+        return currentTopic == null || 
+            currentTopic.numberOfInsertedBlips == currentTopic.numberOfBlips
 
-    insertBlipToExistingTopic = (newRecord, callback) ->
-        newRecord.topicId = getRandomNumberCloseTo(topicId)
-        wikipediaSphinxRTInserter.insertWikiRecord(newRecord, callback)
-        insertionLogger.logInsertion(newRecord.wtext.length)
-        
-    insertBlipToNewTopic = (newRecord, callback) ->
+    createNextTopic = ->
         topicId++
-        newRecord.topicId = topicId 
+        userId++
+        userIds = createUserIdsForTopic()
+        numberOfBlips = getNumberOfBlipsForTopic()
+        currentTopic = {
+            'userIds' : userIds,
+            'numberOfBlips': numberOfBlips,
+            'numberOfInsertedBlips': 0
+        }
+        return currentTopic
+            
+    getNumberOfBlipsForTopic = ->
+        return Math.floor(Math.random() * 95 + 5) # between 5 and 100
+    
+    createUserIdsForTopic = ->
+        numUsers = getNumberOfUsersForTopic()
+        userIds = getUserIdsForTopic(numUsers)
+        return userIds
+    
+    getNumberOfUsersForTopic = ->
+        # TODO(robintibor@gmail.com): make so that it is not distributed equally
+        # but more topics with 5-20 users than with 20-100
+        # and more from 20-100 than from 100-200 etc.
+        maxUsersForTopic = Math.min(userId / 4, 200)
+        # we want a minimal amount of users, 5 
+        # This will yield  between 5 and 200 or 5 and number of users
+        # atelast after there are 20 users, before i t might be less
+        return Math.floor((Math.random() * (maxUsersForTopic - 5)) + 5)
+    
+    getUserIdsForTopic = (numUsers) ->
+        userIdSet = {}
+        maxUserId = userId
+        # always push last user in
+        userIdSet[maxUserId] = true
+        usersAdded = 1
+        while (usersAdded != numUsers)
+            nextUserId = Math.round(Math.random() * maxUserId)
+            if (userIdSet[nextUserId] != true)
+                userIdSet[nextUserId] = true
+                usersAdded++
+        userIds = (parseInt(userIdString) for userIdString in Object.keys(userIdSet))
+        console.log("user ids: #{userIds}")
+        return userIds
+    
+    insertBlipToCurrentTopic = (newRecord, callback) ->
+        blipId++
+        setRecordInfo(newRecord)
         wikipediaSphinxRTInserter.insertWikiRecord(newRecord, callback)
-        insertionLogger.logInsertion(newRecord.wtext.length)
+        isNewTopic = currentTopic.numberOfInsertedBlips == 0
+        insertionLogger.logInsertion(newRecord.wtext.length, isNewTopic)
+        currentTopic.numberOfInsertedBlips++
+    
+    setRecordInfo = (newRecord) ->
+        newRecord.id = blipId
+        newRecord.topicId = topicId
+        newRecord.userIds = currentTopic.userIds 
     
     # this will return the given number with a chance of 1/2
     # return the given number -1 with chance 1/4

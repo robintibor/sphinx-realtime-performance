@@ -13,7 +13,7 @@ class WikipediaSaxParser
 
   # to be defined by user of this class, is called when new record 
   # has been parsed
-  onNewRecord: () ->
+  onNewRecord: (newRecord) ->
       
 
   constructor: (@xmlFilename) ->

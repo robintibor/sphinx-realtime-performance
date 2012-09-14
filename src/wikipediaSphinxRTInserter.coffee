@@ -13,8 +13,9 @@ class WikipediaSphinxRTInserter
     
     insertWikiRecord: (newRecord, callback) ->
         mySQLConnection.query(
-            'INSERT INTO rtwiki(id, topic_id, title, content, user_ids) VALUES(?, ?, ?, ?, (1,2,3))'
-             [newRecord.id, newRecord.topicId, newRecord.wtitle, newRecord.wtext]
+             #Last Parameter is multi-value-attribute, therefore parantheses needed!
+            "INSERT INTO rtwiki(id, topic_id, title, content, user_ids) VALUES(?, ?, ?, ?, (?))"
+             [newRecord.id, newRecord.topicId, newRecord.wtitle, newRecord.wtext, newRecord.userIds]
             (err, info) ->
                 if (err)
                     console.log('ERROR inserting: ', err)
@@ -26,7 +27,7 @@ class WikipediaSphinxRTInserter
         
     updateWikiRecord: (newRecord, callback) ->
         mySQLConnection.query(
-            'REPLACE INTO rtwiki(id, title, content, user_ids) VALUES(?, ?, ?, (1,2,3))'
+            'REPLACE INTO rtwiki(id, title, content) VALUES(?, ?, ?)'
              [newRecord.id, newRecord.wtitle, newRecord.wtext]
             (err, info) ->
                 if (err)
