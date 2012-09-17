@@ -26,7 +26,7 @@ setupQueue = ->
     # Shut down program when parsing is finished and all tasks in queue
     # are complete
     insertQueue.drain = () ->
-        if (finishedParsing) # parser at e
+        if (finishedParsing)
             performanceTestInserter.close()
     insertQueue.empty = ->
         # Resume parser so that new records will be inserted
@@ -56,11 +56,11 @@ listenForUserQuit = ->
       output: process.stdout
     })
     consoleReader.question("Press Enter to stop\n", (answer) ->
-        wikipediaSaxParser.pause()
-        finishedParsing = true
         # prevent queue from resuming parser when empty
         insertQueue.empty = -> 
             console.log("Queue empty, #{insertQueue.concurrency} tasks remaining...")
+        finishedParsing = true
+        wikipediaSaxParser.pause()
         console.log("Quitting, waiting for #{insertQueue.concurrency + insertQueue.length()} tasks.")
         consoleReader.close()
     )

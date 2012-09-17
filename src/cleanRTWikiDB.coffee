@@ -6,8 +6,6 @@ mysql = require('mysql')
 
 mySQLConnection = mysql.createConnection({
   host     : 'localhost',
-  user     : 'root',
-  password : 'mastermap',
   port     : 9306
 })
 

@@ -1,17 +1,20 @@
-WikipediaSphinxRTInserter = require('./wikipediaSphinxRTInserter').WikipediaSphinxRTInserter
+WikipediaSphinxRTConnector = require('./wikipediaSphinxRTConnector').WikipediaSphinxRTConnector
 InsertionLogger = require('./insertionLogger').InsertionLogger
+PerformanceLogger = require('./performanceLogger.js').PerformanceLogger
 
 class PerformanceTestInserter
     numberOfReplacementsPerInsert = 20
     numberOfBlipsPerTopic = 30
-    wikipediaSphinxRTInserter = insertionLogger = null
+    wikipediaSphinxRTConnector = insertionLogger = null
     blipId = 0  # is used as sphinx doc id in theses tests!
     topicId = 1
     userId = 5
     currentTopic = null
 
+    blipIdToTopic = []
+
     constructor: ->
-        wikipediaSphinxRTInserter = new WikipediaSphinxRTInserter()
+        wikipediaSphinxRTConnector = new WikipediaSphinxRTConnector()
         timeStamp = JSON.stringify(new Date()).replace(/"/g, '')
         insertionLogger = new InsertionLogger('perfdata/insertionlog' +
             timeStamp + '.csv')
@@ -34,7 +37,7 @@ class PerformanceTestInserter
     updateBlip = (newRecord, callback) ->
         replaceBlipId = getRandomNumberCloseTo(blipId)
         newRecord.id = replaceBlipId
-        wikipediaSphinxRTInserter.updateWikiRecord(newRecord, callback)
+        wikipediaSphinxRTConnector.updateWikiRecord(newRecord, callback)
         insertionLogger.logReplacement(newRecord.wtext.length)
         
     insertNewBlip = (newRecord, callback) ->
@@ -47,6 +50,7 @@ class PerformanceTestInserter
             currentTopic.numberOfInsertedBlips == currentTopic.numberOfBlips
 
     createNextTopic = ->
+        console.log('blip id to topic', blipIdToTopic)
         topicId++
         userId++
         userIds = createUserIdsForTopic()
@@ -92,9 +96,10 @@ class PerformanceTestInserter
         return userIds
     
     insertBlipToCurrentTopic = (newRecord, callback) ->
+        blipIdToTopic.push(currentTopic)
         blipId++
         setRecordInfo(newRecord)
-        wikipediaSphinxRTInserter.insertWikiRecord(newRecord, callback)
+        wikipediaSphinxRTConnector.insertWikiRecord(newRecord, callback)
         isNewTopic = currentTopic.numberOfInsertedBlips == 0
         insertionLogger.logInsertion(newRecord.wtext.length, isNewTopic)
         currentTopic.numberOfInsertedBlips++
@@ -121,7 +126,7 @@ class PerformanceTestInserter
         
     close: ->
         insertionLogger.writeAverageStatistics()
-        wikipediaSphinxRTInserter.close()
+        wikipediaSphinxRTConnector.close()
         insertionLogger.close()
 
 exports.PerformanceTestInserter = PerformanceTestInserter

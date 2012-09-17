@@ -1,19 +1,17 @@
 mysql = require('mysql')
 stream = require('stream')
 
-class WikipediaSphinxRTInserter
+class WikipediaSphinxRTConnector
     mySQLConnection = null
     constructor: ->
         mySQLConnection = mysql.createConnection({
           host     : 'localhost',
-          user     : 'root',
-          password : 'mastermap',
           port     : 9306
         })
     
     insertWikiRecord: (newRecord, callback) ->
         mySQLConnection.query(
-             #Last Parameter is multi-value-attribute, therefore parantheses needed!
+             #Last Parameter is multi-value-attribute, therefore parentheses needed!
             "INSERT INTO rtwiki(id, topic_id, title, content, user_ids) VALUES(?, ?, ?, ?, (?))"
              [newRecord.id, newRecord.topicId, newRecord.wtitle, newRecord.wtext, newRecord.userIds]
             (err, info) ->
@@ -26,6 +24,8 @@ class WikipediaSphinxRTInserter
         )
         
     updateWikiRecord: (newRecord, callback) ->
+        callback()
+        return
         mySQLConnection.query(
             'REPLACE INTO rtwiki(id, title, content) VALUES(?, ?, ?)'
              [newRecord.id, newRecord.wtitle, newRecord.wtext]
@@ -33,6 +33,23 @@ class WikipediaSphinxRTInserter
                 if (err)
                     console.log('ERROR replacing: ', err)
                     throw err
+                    
+                console.log('replaced something')
+                callback()
+        )
+    
+    searchForWikiRecord: (searchWord, callback) ->
+        mySQLConnection.query(
+             #Last Parameter is multi-value-attribute, therefore parantheses needed!
+            "SELECT * from rtwiki WHERE MATCH(?)"
+             [searchWord]
+            (err, info) ->
+                if (err)
+                    console.log('ERROR searching: ', err)
+                    console.log(' word was #{searchWord}')
+                    console.log("info", info)
+                    throw err
+                console.log("results: ", info);
                 callback()
         )
 
@@ -44,4 +61,4 @@ class WikipediaSphinxRTInserter
                     console.log('Done inserting, flushed To Index.')
                     mySQLConnection.end()
                 )
-exports.WikipediaSphinxRTInserter = WikipediaSphinxRTInserter
+exports.WikipediaSphinxRTConnector = WikipediaSphinxRTConnector

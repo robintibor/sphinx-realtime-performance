@@ -1,9 +1,9 @@
 fs = require('fs')
 util = require('util')
 numToStrWithLength =  require('./utilities').numToStrWithLength
+PerformanceLogger = require('./performanceLogger.js').PerformanceLogger
 
-class InsertionLogger
-    logStream = null
+class InsertionLogger extends PerformanceLogger
       
     numberOfCharsAtLastTick = 0
     numberOfInsertionsAtLastTick = 0
@@ -14,19 +14,7 @@ class InsertionLogger
     numberOfReplacements = 0
     numberOfReplacedChars = 0
     
-    loggingTimeoutId = null
-    startMilliSecond = 0
-    nrOfTopics = 0
-    
-    constructor: (@logFileName) ->
-      
-    start: ->
-         logStream = fs.createWriteStream(@logFileName)
-         # we use timeout and not interval because we do not want to count
-         # the time used for writing to the log file itself
-         loggingTimeoutId = setInterval(writeToLogFile, 1000)
-         logStream.write('#Second   \tCharacters\tInserts\tReplacedChars\tReplaces\tTotalChars\tTotalInserts\tTotalTopics\n')
-         startMilliSecond = Date.now()
+    nrOfTopics = 0      
       
     logInsertion: (numberOfCharacters, newTopic) ->
         numberOfChars += numberOfCharacters
@@ -38,14 +26,17 @@ class InsertionLogger
         numberOfReplacedChars += numberOfCharacters
         numberOfReplacements++
     
-    writeToLogFile = ->
+    getHeader: ->
+        return '#Second   \tCharacters\tInserts\tReplacedChars\tReplaces\tTotalChars\tTotalInserts\tTotalTopics\n'
+    
+    getNextLogString: ->
         numberOfCharsThisSecond = numberOfChars - numberOfCharsAtLastTick
         numberOfInsertionsThisSecond = numberOfInsertions - numberOfInsertionsAtLastTick
         numOfReplacedCharsThisSec = numberOfReplacedChars - numberOfReplacedCharsAtLastTick
         numOfReplacementsThisSec = numberOfReplacements - numberOfReplacementsAtLastTick
 
-        logStream.write(
-            util.format('%s \t %s \t %s \t %s \t %s \t %s \t %s \t %s'
+        logString =
+            util.format('%s \t %s \t %s \t %s \t %s \t %s \t %s \t %s\n'
                        numToStrWithLength((Date.now() % 100000000) / 1000, 10)
                        numToStrWithLength(numberOfCharsThisSecond, 10)
                        numToStrWithLength(numberOfInsertionsThisSecond, 5)
@@ -54,33 +45,29 @@ class InsertionLogger
                        numToStrWithLength(numberOfChars, 10)
                        numToStrWithLength(numberOfInsertions, 10)
                        numToStrWithLength(nrOfTopics, 5)
-                       ))
+                       )
         
-        logStream.write('\n')
         numberOfCharsAtLastTick = numberOfChars
         numberOfInsertionsAtLastTick = numberOfInsertions
         numberOfReplacementsAtLastTick = numberOfReplacements
         numberOfReplacedCharsAtLastTick = numberOfReplacedChars
+        return logString
 
-    writeAverageStatistics: ->
-        milliSecondsNow = Date.now()
-        durationOfPerformanceTest = (milliSecondsNow - startMilliSecond) /  1000
-        averageNumberOfChars = Math.floor(numberOfChars / durationOfPerformanceTest)
-        averageNumberOfInsertions = Math.floor(numberOfInsertions / durationOfPerformanceTest)
-        averageNumberOfReplacedChars = Math.floor(numberOfReplacedChars / durationOfPerformanceTest)
-        averageNumberOfReplaces= Math.floor(numberOfReplacements / durationOfPerformanceTest)
-        averageFileStream = fs.createWriteStream(@logFileName + ".average")
-        averageFileStream.write("# (per sec) Chars\tInserts \tReplacedChars \tReplacements\n")
-        averageFileStream.write(util.format('     %s    \t%s      \t%s \t%s\n',
+    getAverageHeader: ->
+        return '# (per sec) Chars\tInserts \tReplacedChars \tReplacements\n'
+    
+    getAverageString: (testDurationInSec) ->
+        averageNumberOfChars = Math.floor(numberOfChars / testDurationInSec)
+        averageNumberOfInsertions = Math.floor(numberOfInsertions / testDurationInSec)
+        averageNumberOfReplacedChars = Math.floor(numberOfReplacedChars / testDurationInSec)
+        averageNumberOfReplaces= Math.floor(numberOfReplacements / testDurationInSec)
+        return util.format('     %s    \t%s      \t%s \t%s\n',
                                             numToStrWithLength(averageNumberOfChars, 10)
                                             numToStrWithLength(averageNumberOfInsertions, 5)
                                             numToStrWithLength(averageNumberOfReplacedChars, 10)
                                             numToStrWithLength(averageNumberOfReplaces, 5)
-                                            ))
-        averageFileStream.end()
+                                            )
 
-    close: ->
-        clearInterval(loggingTimeoutId)
-        logStream.end()
+
 
 exports.InsertionLogger = InsertionLogger
