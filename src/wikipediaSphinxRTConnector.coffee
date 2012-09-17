@@ -25,14 +25,12 @@ class WikipediaSphinxRTConnector
         
     updateWikiRecord: (newRecord, callback) ->
         mySQLConnection.query(
-            'REPLACE rtwiki(id, topic_id, title, content, user_ids) VALUES(?, ?, ?, ?, (?))'
+            'REPLACE INTO rtwiki(id, topic_id, title, content, user_ids) VALUES(?, ?, ?, ?, (?))'
              [newRecord.id, newRecord.topicId, newRecord.wtitle, newRecord.wtext, newRecord.userIds]
             (err, info) ->
                 if (err)
                     console.log('ERROR replacing: ', err)
                     throw err
-                    
-                console.log('replaced something')
                 callback()
         )
     
