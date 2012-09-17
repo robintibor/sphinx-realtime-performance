@@ -34,18 +34,23 @@ class WikipediaSphinxRTConnector
                 callback()
         )
     
-    searchForWikiRecord: (searchWord, callback) ->
+    searchForUserBlips: (userId, searchWords, groupByTopic, callback) ->
+        searchString = searchWords.join(' ')
+        # ? will be replaced by searchString
+        sphinxQLString = 'SELECT * FROM rtwiki WHERE MATCH(?) '
+        if (groupByTopic)
+            sphinxQLString += 'GROUP BY topic_id '
+        sphinxQLString +=  'LIMIT 300'
         mySQLConnection.query(
              #Last Parameter is multi-value-attribute, therefore parantheses needed!
-            "SELECT * from rtwiki WHERE MATCH(?)"
-             [searchWord]
+             sphinxQLString
+             [searchString]
             (err, info) ->
                 if (err)
                     console.log('ERROR searching: ', err)
-                    console.log(' word was #{searchWord}')
+                    console.log(' word was #{searchWords}')
                     console.log("info", info)
                     throw err
-                console.log("results: ", info);
                 callback()
         )
 
@@ -54,7 +59,7 @@ class WikipediaSphinxRTConnector
                 'FLUSH RTINDEX rtwiki'
                 (err, info)->
                     if (err) then throw err
-                    console.log('Done inserting, flushed To Index.')
+                    console.log('Done, closing Sphinx Connection.')
                     mySQLConnection.end()
                 )
 exports.WikipediaSphinxRTConnector = WikipediaSphinxRTConnector
