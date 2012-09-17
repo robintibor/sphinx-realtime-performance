@@ -11,8 +11,6 @@ class PerformanceTestInserter
     userId = 5
     currentTopic = null
 
-    blipIdToTopic = []
-
     constructor: ->
         wikipediaSphinxRTConnector = new WikipediaSphinxRTConnector()
         timeStamp = JSON.stringify(new Date()).replace(/"/g, '')
@@ -35,11 +33,16 @@ class PerformanceTestInserter
             return insertNewBlip
     
     updateBlip = (newRecord, callback) ->
-        replaceBlipId = getRandomNumberCloseTo(blipId)
+        replaceBlipId = getRandomBlipIdOfCurrentTopic
         newRecord.id = replaceBlipId
+        setRecordInfo(newRecord, replaceBlipId)
         wikipediaSphinxRTConnector.updateWikiRecord(newRecord, callback)
         insertionLogger.logReplacement(newRecord.wtext.length)
-        
+    
+    getRandomBlipIdOfCurrentTopic = () ->
+        startBlipIdOfCurrentTopic = blipId - currentTopic.numberOfInsertedBlips + 1
+        return Math.floor(Math.random() * currentTopic.numberOfInsertedBlips + startBlipIdOfCurrentTopic)
+
     insertNewBlip = (newRecord, callback) ->
         if (currentTopicHasAllBlipsInserted())
             createNextTopic()
@@ -50,7 +53,6 @@ class PerformanceTestInserter
             currentTopic.numberOfInsertedBlips == currentTopic.numberOfBlips
 
     createNextTopic = ->
-        console.log('blip id to topic', blipIdToTopic)
         topicId++
         userId++
         userIds = createUserIdsForTopic()
@@ -96,15 +98,14 @@ class PerformanceTestInserter
         return userIds
     
     insertBlipToCurrentTopic = (newRecord, callback) ->
-        blipIdToTopic.push(currentTopic)
         blipId++
-        setRecordInfo(newRecord)
+        setRecordInfo(newRecord, blipId)
         wikipediaSphinxRTConnector.insertWikiRecord(newRecord, callback)
         isNewTopic = currentTopic.numberOfInsertedBlips == 0
         insertionLogger.logInsertion(newRecord.wtext.length, isNewTopic)
         currentTopic.numberOfInsertedBlips++
     
-    setRecordInfo = (newRecord) ->
+    setRecordInfo = (newRecord, id) ->
         newRecord.id = blipId
         newRecord.topicId = topicId
         newRecord.userIds = currentTopic.userIds 
