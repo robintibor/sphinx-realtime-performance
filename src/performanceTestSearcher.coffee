@@ -26,7 +26,6 @@ class PerformanceTestSearcher
         updateUserInterval = setInterval(updateMaxUserId, 1000)
     
     updateMaxUserId = ->
-        console.log("max user id right now : #{maxUserId}")
         wikipediaSphinxRTConnector.getHighestUserId(maxUserId, (newMaxUserId) ->
             maxUserId = newMaxUserId)
             
@@ -46,7 +45,7 @@ class PerformanceTestSearcher
             return 0        
     
     getRandomUserId = () ->
-        return Math.ceil(Math.random() * maxUserId)
+        return Math.floor(Math.random() * maxUserId)
     
     makeSearchRequest = (userId, numberOfWords, callback) ->
         searchShouldBeGrouped = decideIfSearchShouldBeGrouped(numberOfWords)

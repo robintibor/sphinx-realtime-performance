@@ -87,14 +87,15 @@ class PerformanceTestInserter
         maxUserId = userId
         # always push last user in
         userIdSet[maxUserId] = true
+        # randomly push user ids in set..
         usersAdded = 1
         while (usersAdded != numUsers)
             nextUserId = Math.round(Math.random() * maxUserId)
             if (userIdSet[nextUserId] != true)
                 userIdSet[nextUserId] = true
                 usersAdded++
+        # unpack set
         userIds = (parseInt(userIdString) for userIdString in Object.keys(userIdSet))
-        console.log("user ids: #{userIds}")
         return userIds
     
     insertBlipToCurrentTopic = (newRecord, callback) ->
@@ -127,7 +128,7 @@ class PerformanceTestInserter
         
     close: ->
         insertionLogger.writeAverageStatistics()
-        wikipediaSphinxRTConnector.close()
         insertionLogger.close()
+        wikipediaSphinxRTConnector.close()
 
 exports.PerformanceTestInserter = PerformanceTestInserter

@@ -8,34 +8,7 @@ class WikipediaSphinxRTConnector
           host     : 'localhost',
           port     : 9306
         })
-    
-    # This will try to find the highest user id in the following way:
-    # Search for blips with user ids higher than the given user id
-    # Group them by topic to get more results for one query
-    # and then 
-    getHighestUserId: (oldHighestUserId, callback) ->
-        mySQLConnection.query(
-             #Last Parameter is multi-value-attribute, therefore parentheses needed!
-            'SELECT user_ids FROM rtwiki WHERE user_ids > ? GROUP BY topic_id'
-             [oldHighestUserId]
-            (err, result) ->
-                if (err)
-                    console.log('Could not search for highest user:', err)
-                    throw err
-                if (result.length == 0)
-                    callback(oldHighestUserId)
-                else
-                    maxUserId = getHighestUserIdOfResultSet(result)
-                    callback(maxUserId)
-        )
-    
-    getHighestUserIdOfResultSet = (queryResult) ->
-        # first line: parse result strings to int user ids...
-        # second and third line: http://coffeescriptcookbook.com/chapters/arrays/max-array-value :)
-        allUserIds = (JSON.parse("[" + record.user_ids + "]") for record in queryResult)
-        highestUserIds = (Math.max userIds... for userIds in allUserIds)
-        return Math.max highestUserIds...
-    
+
     insertWikiRecord: (newRecord, callback) ->
         mySQLConnection.query(
              #Last Parameter is multi-value-attribute, therefore parentheses needed!
@@ -69,18 +42,43 @@ class WikipediaSphinxRTConnector
             sphinxQLString += 'GROUP BY topic_id '
         sphinxQLString +=  'LIMIT 300'
         mySQLConnection.query(
-             #Last Parameter is multi-value-attribute, therefore parantheses needed!
              sphinxQLString
              [searchString]
-            (err, info) ->
+            (err, result) ->
                 if (err)
                     console.log('ERROR searching: ', err)
-                    console.log(' word was #{searchWords}')
-                    console.log("info", info)
+                    console.log("info", result)
                     throw err
                 callback()
         )
-
+    
+    # This will try to find the highest user id in the following way:
+    # Search for blips with user ids higher than the given user id
+    # Group them by topic to get more results for one query
+    # and then go through result user ids to find biggest one..
+    getHighestUserId: (oldHighestUserId, callback) ->
+        mySQLConnection.query(
+             #Last Parameter is multi-value-attribute, therefore parentheses needed!
+            'SELECT user_ids FROM rtwiki WHERE user_ids > ? GROUP BY topic_id'
+             [oldHighestUserId]
+            (err, result) ->
+                if (err)
+                    console.log('Could not search for highest user:', err)
+                    throw err
+                if (result.length == 0)
+                    callback(oldHighestUserId)
+                else
+                    maxUserId = getHighestUserIdOfResultSet(result)
+                    callback(maxUserId)
+        )
+    
+    getHighestUserIdOfResultSet = (queryResult) ->
+        # first line: parse result user ids strings to int user ids...
+        # second and third line: http://coffeescriptcookbook.com/chapters/arrays/max-array-value :)
+        allUserIds = (JSON.parse("[" + record.user_ids + "]") for record in queryResult)
+        highestUserIds = (Math.max userIds... for userIds in allUserIds)
+        return Math.max highestUserIds...
+    
     close: () ->
             mySQLConnection.query(
                 'FLUSH RTINDEX rtwiki'
