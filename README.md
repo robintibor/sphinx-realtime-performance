@@ -8,5 +8,8 @@ cake --inputfile <wikipediaxmlfile> run-perf
 ```
 
 It expects there to be a directory 'perffile' where to store the insertion and the searchlogs.
+
 To clean the sphinx real time index after inserting use
+```
 cake clean-sphinx
+```
