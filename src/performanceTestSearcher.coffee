@@ -1,24 +1,42 @@
 WikipediaSphinxRTConnector = require('./wikipediaSphinxRTConnector').WikipediaSphinxRTConnector
+SearchLogger = require('./searchLogger').SearchLogger
+
 class PerformanceTestSearcher
     
     chanceOfGrouping = 2/3
     chanceOfTwoWordSearch = 0.1
     chanceOfOneWordSearch = 0.2
     # get words
-    allSearchWords = ["and", "or"]
-    wikipediaSphinxRTConnector = null
-    userId = 0
+    allSearchWords = ['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'I', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us']
+    wikipediaSphinxRTConnector = searchLogger = null
+    updateUserInterval = null
+    maxUserId = 1
 
     constructor: ->
         wikipediaSphinxRTConnector = new WikipediaSphinxRTConnector()
+        timeStamp = JSON.stringify(new Date()).replace(/"/g, '')
+        searchLogger = new SearchLogger('perfdata/searchlog' +
+            timeStamp + '.csv')
+    
+    start: ->
+        searchLogger.start()
+        continuouslyUpdateUserId()
+    
+    continuouslyUpdateUserId = ->
+        updateUserInterval = setInterval(updateMaxUserId, 1000)
+    
+    updateMaxUserId = ->
+        console.log("max user id right now : #{maxUserId}")
+        wikipediaSphinxRTConnector.getHighestUserId(maxUserId, (newMaxUserId) ->
+            maxUserId = newMaxUserId)
+            
     
     makeNextSearchRequest: (callback) ->
-        word = "and"
-        numberOfWordsForSearch = decideNumberOfWords()
+        numberOfWordsForRequest= chooseNumberOfWords()
         userId = getRandomUserId()
-        makeSearchRequest(userId, numberOfWordsForSearch, callback)
+        makeSearchRequest(userId, numberOfWordsForRequest, callback)
     
-    decideNumberOfWords = ->
+    chooseNumberOfWords = ->
         randomNumber = Math.random()
         if (randomNumber < chanceOfTwoWordSearch)
             return 2
@@ -28,11 +46,12 @@ class PerformanceTestSearcher
             return 0        
     
     getRandomUserId = () ->
-        return 1;
+        return Math.ceil(Math.random() * maxUserId)
     
     makeSearchRequest = (userId, numberOfWords, callback) ->
         searchShouldBeGrouped = decideIfSearchShouldBeGrouped(numberOfWords)
         searchWords = getWords(numberOfWords)
+        searchLogger.logSearch()
         wikipediaSphinxRTConnector.searchForUserBlips(userId, searchWords, searchShouldBeGrouped, callback)
     
     decideIfSearchShouldBeGrouped = (numberOfWords) ->
@@ -53,5 +72,8 @@ class PerformanceTestSearcher
         return allSearchWords[Math.floor(Math.random() * allSearchWords.length)]
     
     close: ->
+        clearInterval(updateUserInterval)
+        searchLogger.writeAverageStatistics()
+        searchLogger.close()
         wikipediaSphinxRTConnector.close()
 exports.PerformanceTestSearcher = PerformanceTestSearcher

@@ -2,8 +2,8 @@ queue = require('async').queue
 readline = require('readline')
 PerformanceTestSearcher = require('./performanceTestSearcher.js').PerformanceTestSearcher
 
-numOfTasksDoneAtOnce = 300
-numOfMaximumQueuedTasks = 200
+numOfTasksDoneAtOnce = 130
+numOfMaximumQueuedTasks = 50
 searchingFinished = false;
 # just always search for the same word, search for and or something...
 
@@ -25,7 +25,8 @@ setupQueue = ->
         else
             console.log('insert queue drained, no tasks are done at the moment, should only happen at the end')
             
-        
+startLogging = ->
+    performanceTestSearcher.start()
 
 continouslyMakeSearches = ->
     while (insertQueue.length() < numOfMaximumQueuedTasks && ! searchingFinished)
@@ -46,6 +47,7 @@ listenForUserQuit = ->
     )
 
 setupQueue()
+startLogging()
 continouslyMakeSearches()
 listenForUserQuit()
 
