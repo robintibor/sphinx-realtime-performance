@@ -23,6 +23,12 @@ runJitter = (argumentsForJitter) ->
 
 task 'build', 'Build lib/ from src/', ->
   build()
+task 'clean-sphinx', 'clean sphinx rtwiki index', (options) ->
+    cleanTask = spawn('node', ['lib/cleanRTWikiDB.js'])
+    cleanTask.stderr.on 'data', (data) ->
+      process.stderr.write data.toString()
+    cleanTask.stdout.on 'data', (data) ->
+      print data.toString()
 
 task 'setup-auto-compiling-and-testing', 'compile src and test on changes, run test on changes', ->
     jitter = spawn 'jitter', ['src', 'lib', 'test']
@@ -34,23 +40,21 @@ task 'setup-auto-compiling-and-testing', 'compile src and test on changes, run t
 task 'auto-compile', 'compiles src and test on changes wihtout running tests', ->
     runJitter(['src', 'lib'])
     runJitter(['test', 'test'])
-
-option '', '--inputfile [Filename]', 'Filename tof wikipedia xml input file...'
-task 'run-perf', 'run small performance test to check whether everything is ok', (options) ->
-    printOutput = (error, stdout, stderr) ->
-        print 'ERROR:' + error if error
-        print stdout if stdout
-        print 'STDERR:' + stderr if stderr
-    exec 'node lib/insertWikipediaToSphinx.js ' + options['inputfile'],
-         ((error, stdout, stderr) -> 
-            printOutput(error, stdout, stderr)
-            exec 'node lib/cleanRTWikiDB.js',
-                (error, stdout, stderr) -> 
-                    printOutput(error, stdout, stderr)
-                    exec 'cat insertionlog.csv', printOutput
-                )
             
-        
+option '', '--inputfile [Filename]', 'Filename tof wikipedia xml input file...'
+task 'run-perf', 'run performance test for searching and inserting', (options) ->
+    insertTask = spawn('node', ['lib/performanceTestInserter.js', options['inputfile']])
+    insertTask.stderr.on 'data', (data) ->
+      process.stderr.write data.toString()
+    insertTask.stdout.on 'data', (data) ->
+      print data.toString()
+    process.stdin.pipe(insertTask.stdin)
+    searchTask = spawn('node', ['lib/performanceTestSearcher.js', options['inputfile']])
+    searchTask.stderr.on 'data', (data) ->
+      process.stderr.write data.toString()
+    searchTask.stdout.on 'data', (data) ->
+      print data.toString()
+    process.stdin.pipe(searchTask.stdin)
             
     
     

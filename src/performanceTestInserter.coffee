@@ -13,7 +13,7 @@ PerformanceLogger = require('./performanceLogger.js').PerformanceLogger
 
 numOfTasksDoneAtOnce = 200
 numOfMaximumQueuedTasks = 100
-numberOfReplacementsPerInsert = 20
+numberOfReplacementsPerInsert = 10
 # actual numbers will be distributed equally between 5 and these maximum numbers
 maximumNumberOfUsersPerTopic = 200
 maximumNumberOfBlipsPerTopic = 100
@@ -28,8 +28,9 @@ class PerformanceTestInserter
     constructor: ->
         wikipediaSphinxRTConnector = new WikipediaSphinxRTConnector()
         timeStamp = JSON.stringify(new Date()).replace(/"/g, '')
-        insertionLogger = new InsertionLogger('perfdata/insertionlog' +
-            timeStamp + '.csv')
+        fileName = 'perfdata/insertionlog' + timeStamp + '.csv'
+        insertionLogger = new InsertionLogger(fileName)
+        console.log("Follow Insertion Log with: tail -f #{fileName}")
     
     start: ->
         insertionLogger.start()
@@ -207,6 +208,5 @@ setupPerformanceInserter()
 setupParser()
 startInserting()
 listenForUserQuit()
-
 
 exports.PerformanceTestInserter = PerformanceTestInserter

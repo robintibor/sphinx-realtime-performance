@@ -23,8 +23,9 @@ class PerformanceTestSearcher
     constructor: ->
         wikipediaSphinxRTConnector = new WikipediaSphinxRTConnector()
         timeStamp = JSON.stringify(new Date()).replace(/"/g, '')
-        searchLogger = new SearchLogger('perfdata/searchlog' +
-            timeStamp + '.csv')
+        fileName = 'perfdata/searchlog' + timeStamp + '.csv'
+        searchLogger = new SearchLogger(fileName)
+        console.log("Follow Search Log with: tail -f #{fileName}")
     
     start: ->
         searchLogger.start()
@@ -58,7 +59,7 @@ class PerformanceTestSearcher
     makeSearchRequest = (userId, numberOfWords, callback) ->
         searchShouldBeGrouped = decideIfSearchShouldBeGrouped(numberOfWords)
         searchWords = getWords(numberOfWords)
-        searchLogger.logSearch()
+        searchLogger.logSearch(numberOfWords, searchShouldBeGrouped)
         wikipediaSphinxRTConnector.searchForUserBlips(userId, searchWords, searchShouldBeGrouped, callback)
     
     decideIfSearchShouldBeGrouped = (numberOfWords) ->
@@ -66,7 +67,6 @@ class PerformanceTestSearcher
             return Math.random() < chanceOfGrouping
         else
             return false
-    
     
     getWords = (numberOfWords) ->
         if (numberOfWords == 0) 
