@@ -48,7 +48,7 @@ class PerformanceTestInserter
             return insertNewBlip
     
     updateBlip = (newRecord, callback) ->
-        replaceBlipId = getRandomBlipIdOfCurrentTopic
+        replaceBlipId = getRandomBlipIdOfCurrentTopic()
         newRecord.id = replaceBlipId
         setRecordInfo(newRecord, replaceBlipId)
         wikipediaSphinxRTConnector.updateWikiRecord(newRecord, callback)
