@@ -46,7 +46,6 @@ class PerformanceTestInserter
     updateBlip = (newRecord, callback) ->
         replaceBlipId = getRandomBlipIdOfCurrentTopic()
         newRecord.id = replaceBlipId
-        console.log("updating #{newRecord.id} with #{newRecord.wtext[0..50]}")
         setRecordInfo(newRecord, replaceBlipId)
         wikipediaSphinxRTConnector.updateWikiRecord(newRecord, callback)
         insertionLogger.logReplacement(newRecord.wtext.length)
