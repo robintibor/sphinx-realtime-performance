@@ -37,13 +37,13 @@ class WikipediaSphinxRTConnector
     searchForUserBlips: (userId, searchWords, groupByTopic, callback) ->
         searchString = searchWords.join(' ')
         # ? will be replaced by searchString
-        sphinxQLString = 'SELECT * FROM rtwiki WHERE MATCH(?) AND user_ids = ?'
+        sphinxQLString = 'SELECT * FROM rtwiki WHERE user_ids =  ? AND MATCH(?) '
         if (groupByTopic)
             sphinxQLString += 'GROUP BY topic_id '
         sphinxQLString +=  'LIMIT 300'
         mySQLConnection.query(
              sphinxQLString
-             [searchString]
+             [userId, searchString]
             (err, result) ->
                 if (err)
                     console.log('ERROR searching: ', err)
