@@ -70,7 +70,7 @@ class SearchLogger extends PerformanceLogger
         return logString
 
     getAverageHeader: ->
-        return '# (/sec) Grouped\tUngrouped\tOneWord\tTwoWord\TotalSearches\n'
+        return '# (/sec) Grouped\tUngrouped\tOneWord\t        TwoWord \t    TotalSearches\n'
     
     getAverageString: (testDurationInSec) ->
         totalSearches = numberOfGroupedSearches + numberOfUnGroupedSearches +
@@ -80,12 +80,12 @@ class SearchLogger extends PerformanceLogger
         averageNumberOfOneWordSearches = Math.floor(numberOfOneWordSearches / testDurationInSec)
         averageNumberOfTwoWordSearches = Math.floor(numberOfTwoWordSearches / testDurationInSec)
         averageNumberOfSearches = Math.floor(totalSearches / testDurationInSec)
-        return util.format('     %s\t%s\t%s\t%s%s\n',
-                           numToStrWithLength(averageNumberOfGroupedSearches, 10)
-                           numToStrWithLength(averageNumberOfUnGroupedSearches, 10)
-                           numToStrWithLength(averageNumberOfOneWordSearches, 10)
-                           numToStrWithLength(averageNumberOfTwoWordSearches, 10)
-                           numToStrWithLength(averageNumberOfSearches, 10)
+        return util.format('     %s\t%s\t%s\t%s\t%s\n',
+                           numToStrWithLength(averageNumberOfGroupedSearches, 12)
+                           numToStrWithLength(averageNumberOfUnGroupedSearches, 9)
+                           numToStrWithLength(averageNumberOfOneWordSearches, 9)
+                           numToStrWithLength(averageNumberOfTwoWordSearches, 9)
+                           numToStrWithLength(averageNumberOfSearches, 9)
                           )
 
 exports.SearchLogger = SearchLogger
