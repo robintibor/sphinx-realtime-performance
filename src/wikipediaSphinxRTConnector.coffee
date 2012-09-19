@@ -37,7 +37,7 @@ class WikipediaSphinxRTConnector
     searchForUserBlips: (userId, searchWords, groupByTopic, callback) ->
         searchString = searchWords.join(' ')
         # ? will be replaced by searchString
-        sphinxQLString = 'SELECT * FROM rtwiki WHERE user_ids =  ? AND MATCH(?) '
+        sphinxQLString = 'SELECT * FROM rtwiki WHERE user_ids = ? AND MATCH(?) '
         if (groupByTopic)
             sphinxQLString += 'GROUP BY topic_id '
         sphinxQLString +=  'LIMIT 300'
