@@ -43,7 +43,7 @@ task 'auto-compile', 'compiles src and test on changes wihtout running tests', -
             
 option '', '--inputfile [Filename]', 'Filename tof wikipedia xml input file...'
 task 'run-perf', 'run performance test for searching and inserting', (options) ->
-    insertTask = spawn('node', ['lib/performanceTestInserter.js', options['inputfile']])
+    insertTask = spawn('node', ['lib/startInserting.js', options['inputfile']])
     insertTask.stderr.on 'data', (data) ->
       process.stderr.write data.toString()
     insertTask.stdout.on 'data', (data) ->
